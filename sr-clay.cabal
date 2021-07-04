@@ -1,0 +1,29 @@
+Name:           sr-clay
+Version:        1.0
+License:        BSD3
+Author:         David Fox
+Category:       Unclassified
+Synopsis:       Map Haskell types to CSS class names and CSS style code.
+Description: Two classes, CssClass(cssClass) and CssStyle(cssStyle).  Values of types that are instances of CssClass can be mapped to CSS class names.  Types that are instances of CssStyle map to a block of CSS style code pertaining to that type.
+Maintainer:     David Fox <dsf@seereason.com>
+Homepage:       https://github.com/seereason/sr-clay
+Build-Type:     Simple
+Cabal-Version:  >= 1.10
+Tested-With: GHC==8.6.5
+
+Library
+  default-language: Haskell2010
+  GHC-Options: -Wall -Wredundant-constraints
+  Build-Depends: base >= 4.9 && < 5, text
+  Exposed-Modules: SeeReason.Css
+  if !impl(ghcjs)
+    Build-Depends: clay, data-default, directory, template-haskell
+    cpp-options: -DCLIENT=0
+    cpp-options: -DSERVER=1
+  if impl(ghcjs)
+    cpp-options: -DCLIENT=1
+    cpp-options: -DSERVER=0
+
+  Default-Extensions: ConstraintKinds, CPP, DataKinds, DeriveDataTypeable, DeriveFunctor, DeriveGeneric
+  Default-Extensions: FlexibleInstances, FlexibleContexts, MultiParamTypeClasses, RankNTypes
+  Default-Extensions: ScopedTypeVariables, StandaloneDeriving, TupleSections, TypeApplications, TypeFamilies
