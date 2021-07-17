@@ -2,6 +2,7 @@
 
 module SeeReason.Css
   ( CssClass(cssClass)
+  , withHash
 #if SERVER
   , CssStyle(cssStyle)
   , byClass'
@@ -11,7 +12,6 @@ module SeeReason.Css
 
 import Data.Hashable
 import Data.Text (pack, Text)
-import Debug.Trace
 import GHC.Stack
 import GHC.Stack.Types
 import Text.Printf
@@ -46,8 +46,8 @@ withHash s = do
   locHash callStack
   where
     locHash EmptyCallStack = s
-    locHash (PushCallStack "withHash" loc more) = locHash more
-    locHash (PushCallStack fn loc more) = s <> "_" <> pack (printf "%07x" (mod (hash loc) 0x10000000))
+    locHash (PushCallStack "withHash" _loc more) = locHash more
+    locHash (PushCallStack _fn loc _more) = s <> "_" <> pack (printf "%07x" (mod (hash loc) 0x10000000))
     locHash (FreezeCallStack more) = locHash more
 
 -- data TestHash = TestHash deriving Show
