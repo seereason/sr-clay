@@ -14,7 +14,7 @@ Tested-With: GHC==8.6.5
 Library
   default-language: Haskell2010
   GHC-Options: -Wall -Wredundant-constraints
-  Build-Depends: base >= 4.9 && < 5, text
+  Build-Depends: base >= 4.9 && < 5, hashable, text
   Exposed-Modules: SeeReason.Css
   if !impl(ghcjs)
     Build-Depends: clay, data-default, directory, template-haskell

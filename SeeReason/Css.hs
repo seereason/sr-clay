@@ -1,4 +1,4 @@
-{-# LANGUAGE AllowAmbiguousTypes, FunctionalDependencies, LambdaCase, OverloadedStrings, TemplateHaskell #-}
+{-# LANGUAGE AllowAmbiguousTypes, CPP, FunctionalDependencies, LambdaCase, OverloadedStrings, RecordWildCards, TemplateHaskell #-}
 
 module SeeReason.Css
   ( CssClass(cssClass)
@@ -9,9 +9,14 @@ module SeeReason.Css
 #endif
   ) where
 
-import Data.Text (Text)
+import Data.Hashable
+import Data.Text (pack, Text)
+import Debug.Trace
+import GHC.Stack
+import GHC.Stack.Types
+import Text.Printf
 #if SERVER
-import Clay
+import Clay hiding (s)
 import Data.Default (Default(def))
 import Language.Haskell.TH (listE, litE, stringL, Type(AppT, ConT))
 import Language.Haskell.TH.Syntax (Dec(..), Exp, mkName, Q, reifyInstances, Type(VarT))
@@ -20,7 +25,38 @@ import System.Directory ()
 
 -- | Instances of 'CssClass' can be converted to css class names.
 class CssClass a where
-  cssClass :: a -> Text
+  cssClass :: HasCallStack => a -> Text
+
+instance Hashable SrcLoc where
+  hash (SrcLoc{..}) =
+    hash srcLocPackage `hashWithSalt` srcLocPackage
+                       `hashWithSalt` srcLocModule
+                       -- `hashWithSalt` srcLocFile
+                       `hashWithSalt` srcLocStartLine
+                       `hashWithSalt` srcLocStartCol
+  hashWithSalt s (SrcLoc{..}) =
+    s `hashWithSalt` srcLocPackage
+      `hashWithSalt` srcLocModule
+      -- `hashWithSalt` srcLocFile
+      `hashWithSalt` srcLocStartLine
+      `hashWithSalt` srcLocStartCol
+
+withHash :: HasCallStack => Text -> Text
+withHash s = do
+  locHash callStack
+  where
+    locHash EmptyCallStack = s
+    locHash (PushCallStack "withHash" loc more) = locHash more
+    locHash (PushCallStack fn loc more) = s <> "_" <> pack (printf "%07x" (mod (hash loc) 0x10000000))
+    locHash (FreezeCallStack more) = locHash more
+
+-- data TestHash = TestHash deriving Show
+--
+-- instance CssClass TestHash where
+--   cssClass = withHash . pack . show
+--
+-- > cssClass TestHash
+-- "TestHash_84f295f"
 
 #if SERVER
 -- | Instances of 'CssStyle' generate a Css value.
