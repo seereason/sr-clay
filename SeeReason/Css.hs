@@ -10,13 +10,16 @@ module SeeReason.Css
 #endif
   ) where
 
-import Data.Hashable
-import Data.Text (pack, Text)
+import Data.ByteString.Lazy as Lazy (fromStrict)
+import Data.Char (isAlphaNum, isAscii, isSpace)
+import Data.Digest.Pure.MD5 (md5)
+import Data.Serialize (encode)
+import Data.Text as Text (map, pack, singleton, Text)
+import qualified Data.Text as Text (concatMap)
 import GHC.Stack
 import GHC.Stack.Types
-import Text.Printf
 #if SERVER
-import Clay hiding (s)
+import Clay hiding (not, s)
 import Data.Default (Default(def))
 import Language.Haskell.TH (listE, litE, stringL, Type(AppT, ConT))
 import Language.Haskell.TH.Syntax (Dec(..), Exp, mkName, Q, reifyInstances, Type(VarT))
@@ -27,28 +30,44 @@ import System.Directory ()
 class CssClass a where
   cssClass :: HasCallStack => a -> Text
 
-instance Hashable SrcLoc where
-  hash (SrcLoc{..}) =
-    hash srcLocPackage `hashWithSalt` srcLocPackage
-                       `hashWithSalt` srcLocModule
-                       -- `hashWithSalt` srcLocFile
-                       `hashWithSalt` srcLocStartLine
-                       `hashWithSalt` srcLocStartCol
-  hashWithSalt s (SrcLoc{..}) =
-    s `hashWithSalt` srcLocPackage
-      `hashWithSalt` srcLocModule
-      -- `hashWithSalt` srcLocFile
-      `hashWithSalt` srcLocStartLine
-      `hashWithSalt` srcLocStartCol
+-- FIXME - protect leading digits and hyphens
+protectCSSIdentifier :: Text -> Text
+protectCSSIdentifier t = Text.concatMap protectCSSChar t
+  where
+    protectCSSChar :: Char -> Text
+    protectCSSChar '-' = "-"
+    protectCSSChar '_' = "_"
+    protectCSSChar '.' = "_" -- the backslash escaping doesn't seem to work
+    protectCSSChar c | isAlphaNum c = singleton c
+    protectCSSChar c | not (isAscii c) = singleton c
+    protectCSSChar c@'\n' = "_" -- hexEscape c
+    protectCSSChar c@'\r' = "_" -- hexEscape c
+    protectCSSChar c | isSpace c = "_" -- hexEscape c
+    protectCSSChar c = "\\" <> singleton c
 
 withHash :: HasCallStack => Text -> Text
 withHash s = do
-  locHash callStack
+  s <> locHash callStack
   where
-    locHash EmptyCallStack = s
-    locHash (PushCallStack "withHash" _loc more) = locHash more
-    locHash (PushCallStack _fn loc _more) = s <> "_" <> pack (printf "%07x" (mod (hash loc) 0x10000000))
+    -- This is the module we want, where withHash was called
+    locHash (PushCallStack "withHash" SrcLoc{..} _more) =
+      "_" <> pack (take 7 (show (md5 (fromStrict (encode srcLocModule)))))
+       -- <> protectCSSIdentifier (pack (srcLocPackage <> "_" <> srcLocModule)) -- this actually works too
+    -- Some other module - this probably won't happen, withHash should come first
+    locHash (PushCallStack _fn _loc more) = locHash more
     locHash (FreezeCallStack more) = locHash more
+    locHash EmptyCallStack = ""
+
+    protect :: Text -> Text
+    protect = Text.map protectChar
+
+    protectChar '-' = '-'
+    protectChar '_' = '_'
+    protectChar c | isAlphaNum c = c
+
+    protectChar '.' = '_'
+    protectChar c | isSpace c = '_'
+    protectChar c = '_'
 
 -- data TestHash = TestHash deriving Show
 --
