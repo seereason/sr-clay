@@ -9,9 +9,6 @@ module SeeReason.Css
   , byClass'
   , reifyCss
 #endif
-#if CLIENT
-  , _class
-#endif
   ) where
 
 import Data.ByteString.Lazy as Lazy (fromStrict)
@@ -28,9 +25,6 @@ import Data.Default (Default(def))
 import Language.Haskell.TH (listE, litE, stringL, Type(AppT, ConT))
 import Language.Haskell.TH.Syntax (Dec(..), Exp, mkName, Q, reifyInstances, Type(VarT))
 import System.Directory ()
-#endif
-#if CLIENT
-import Alderon.Alderon  (Attribute, classes_)
 #endif
 
 -- | Instances of 'CssClass' can be converted to css class names.
@@ -94,9 +88,4 @@ reifyCss = do
   listE (concatMap (\case InstanceD _ _cxt (AppT (AppT _cls typ@(ConT tname)) prefs) _decs ->
                             [ [|($(litE (stringL (show tname))), cssStyle @ $(pure typ) @ $(pure prefs) def)|] ]
                           _ -> []) insts)
-#endif
-
-#if CLIENT
-class_ :: CssClass c => c -> Attribute
-class_ c = classes_ [cssClass c]
 #endif

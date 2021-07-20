@@ -21,7 +21,6 @@ Library
     cpp-options: -DCLIENT=0
     cpp-options: -DSERVER=1
   if impl(ghcjs)
-    Build-Depends: alderon2
     cpp-options: -DCLIENT=1
     cpp-options: -DSERVER=0
 
