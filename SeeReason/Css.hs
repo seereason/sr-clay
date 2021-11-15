@@ -73,7 +73,7 @@ withHash s = do
 
 #if SERVER
 -- | Instances of 'CssStyle' generate a Css value.
-class (CssClass a, Default prefs) => CssStyle a prefs | a -> prefs where
+class (CssClass a) => CssStyle a prefs | a -> prefs where
   cssStyle :: prefs -> Css
 
 byClass' :: CssClass a => a -> Refinement
