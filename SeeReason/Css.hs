@@ -19,13 +19,15 @@ import Data.ByteString.Lazy as Lazy (fromStrict)
 import Data.Char (isAlphaNum, isAscii, isSpace)
 import Data.Digest.Pure.MD5 (md5)
 import Data.Serialize (encode)
-import Data.Text as Text ({-map,-} pack, singleton, Text)
+import Data.Text as Text (pack, singleton, Text)
 import Data.Text.Lazy as Lazy (unpack)
 import qualified Data.Text as Text (concatMap)
 import GHC.Stack
 import GHC.Stack.Types
+import Language.Haskell.TH.Syntax (Name(..), ModName(..), NameFlavour(..), NameSpace(..), OccName(..))
+
 #if SERVER
-import Clay hiding (not, s)
+import Clay hiding (not, s, space)
 import Data.Default (Default(def))
 import Language.Haskell.TH (listE, litE, stringL, Type(AppT, ConT))
 import Language.Haskell.TH.Syntax (Dec(..), Exp, mkName, Q, reifyInstances, Type(VarT))
@@ -35,6 +37,17 @@ import System.Directory ()
 -- | Instances of 'CssClass' can be converted to css class names.
 class CssClass a where
   cssClass :: HasCallStack => a -> Text
+
+-- | Any reasonable haskell 'Name' can be a 'CssClass'.
+instance CssClass Name where
+  cssClass (Name (OccName o) (NameG space _ (ModName m))) =
+    protectCSSIdentifier (pack (m <> "-" <> o <>
+                               case space of
+                                 TcClsName -> "_T"
+                                 DataName -> "_D"
+                                 VarName -> "_V"))
+  cssClass (Name (OccName o) (NameQ (ModName m))) = protectCSSIdentifier (pack (m <> "-" <> o))
+  cssClass (Name o f) = error ("cssClass (Name " <> show o <> " " <> show f <> ")")
 
 -- FIXME - protect leading digits and hyphens
 protectCSSIdentifier :: Text -> Text
@@ -83,7 +96,7 @@ class_ c = classes_ [cssClass c]
 
 #if SERVER
 -- | Instances of 'CssStyle' generate a Css value.
-class (CssClass a) => CssStyle a prefs | a -> prefs where
+class CssStyle a prefs | a -> prefs where
   cssStyle :: prefs -> Css
 
 byClass' :: CssClass a => a -> Refinement
