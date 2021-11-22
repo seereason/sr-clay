@@ -8,6 +8,10 @@ module SeeReason.Css
   , CssStyle(cssStyle)
   , byClass'
   , reifyCss
+  , putCss
+#endif
+#if CLIENT
+  , class_
 #endif
   ) where
 
@@ -71,6 +75,11 @@ withHash s = do
     protectChar c = '_'
 #endif
 
+#if CLIENT
+class_ :: CssClass c => c -> Attribute
+class_ c = classes_ [cssClass c]
+#endif
+
 #if SERVER
 -- | Instances of 'CssStyle' generate a Css value.
 class (CssClass a) => CssStyle a prefs | a -> prefs where
@@ -88,4 +97,8 @@ reifyCss = do
   listE (concatMap (\case InstanceD _ _cxt (AppT (AppT _cls typ@(ConT tname)) prefs) _decs ->
                             [ [|($(litE (stringL (show tname))), cssStyle @ $(pure typ) @ $(pure prefs) def)|] ]
                           _ -> []) insts)
+
+-- Render and print, for debugging
+putCss :: Css -> IO ()
+putCss = putStrLn . Lazy.unpack . renderWith compact []
 #endif
