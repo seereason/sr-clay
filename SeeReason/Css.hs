@@ -89,11 +89,6 @@ withHash s = do
     protectChar c = '_'
 #endif
 
-#if CLIENT
-class_ :: CssClass c => c -> Attribute
-class_ c = classes_ [cssClass c]
-#endif
-
 #if SERVER
 -- | Instances of 'CssStyle' generate a Css value.
 class CssStyle a prefs | a -> prefs where
