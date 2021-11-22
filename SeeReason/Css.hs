@@ -8,7 +8,7 @@ module SeeReason.Css
   , CssStyle(cssStyle)
   , byClass'
   , reifyCss
-  , putCss
+  , putCss'
 #endif
 #if CLIENT
   , class_
@@ -20,6 +20,7 @@ import Data.Char (isAlphaNum, isAscii, isSpace)
 import Data.Digest.Pure.MD5 (md5)
 import Data.Serialize (encode)
 import Data.Text as Text ({-map,-} pack, singleton, Text)
+import Data.Text.Lazy as Lazy (unpack)
 import qualified Data.Text as Text (concatMap)
 import GHC.Stack
 import GHC.Stack.Types
@@ -98,7 +99,7 @@ reifyCss = do
                             [ [|($(litE (stringL (show tname))), cssStyle @ $(pure typ) @ $(pure prefs) def)|] ]
                           _ -> []) insts)
 
--- Render and print, for debugging
-putCss :: Css -> IO ()
-putCss = putStrLn . Lazy.unpack . renderWith compact []
+-- Render and print in a compact format, for debugging
+putCss' :: Css -> IO ()
+putCss' = putStrLn . Lazy.unpack . renderWith compact []
 #endif
