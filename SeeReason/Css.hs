@@ -10,9 +10,6 @@ module SeeReason.Css
   , reifyCss
   , putCss'
 #endif
-#if CLIENT
-  , class_
-#endif
   ) where
 
 import Data.ByteString.Lazy as Lazy (fromStrict)
