@@ -44,6 +44,7 @@ instance CssClass Name where
                                  DataName -> "_D"
                                  VarName -> "_V"))
   cssClass (Name (OccName o) (NameQ (ModName m))) = protectCSSIdentifier (pack (m <> "-" <> o))
+  cssClass (Name (OccName o) NameS) = pack o
   cssClass (Name o f) = error ("cssClass (Name " <> show o <> " " <> show f <> ")")
 
 -- FIXME - protect leading digits and hyphens
