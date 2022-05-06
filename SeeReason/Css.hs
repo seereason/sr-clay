@@ -1,4 +1,12 @@
-{-# LANGUAGE AllowAmbiguousTypes, CPP, FunctionalDependencies, LambdaCase, OverloadedStrings, RecordWildCards, TemplateHaskell #-}
+{-# LANGUAGE AllowAmbiguousTypes #-}
+{-# LANGUAGE CPP #-}
+{-# LANGUAGE FunctionalDependencies #-}
+{-# LANGUAGE LambdaCase #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE RecordWildCards #-}
+{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE TypeApplications #-}
 
 module SeeReason.Css
   ( CssClass(cssClass)
@@ -25,8 +33,7 @@ import Language.Haskell.TH.Syntax (Name(..), ModName(..), NameFlavour(..), NameS
 
 #if SERVER
 import Clay hiding (not, s, space)
-import Data.Default (Default(def))
-import Language.Haskell.TH (listE, litE, stringL, Type(AppT, ConT))
+import Language.Haskell.TH (appTypeE, listE, litE, stringL, Type(AppT, ConT))
 import Language.Haskell.TH.Syntax (Dec(..), Exp, mkName, Q, reifyInstances, Type(VarT))
 import System.Directory ()
 #endif
@@ -102,7 +109,7 @@ reifyCss :: Q Exp
 reifyCss = do
   insts <- reifyInstances ''CssStyle [VarT (mkName "a"), VarT (mkName "prefs")]
   listE (concatMap (\case InstanceD _ _cxt (AppT (AppT _cls typ@(ConT tname)) prefs) _decs ->
-                            [ [|($(litE (stringL (show tname))), cssStyle @ $(pure typ) @ $(pure prefs) def)|] ]
+                            [ [|($(litE (stringL (show tname))), $(appTypeE (appTypeE [|cssStyle|] (pure typ)) (pure prefs)) def)|] ]
                           _ -> []) insts)
 
 -- Render and print in a compact format, for debugging

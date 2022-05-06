@@ -23,7 +23,3 @@ Library
   if impl(ghcjs)
     cpp-options: -DCLIENT=1
     cpp-options: -DSERVER=0
-
-  Default-Extensions: ConstraintKinds, CPP, DataKinds, DeriveDataTypeable, DeriveFunctor, DeriveGeneric
-  Default-Extensions: FlexibleInstances, FlexibleContexts, MultiParamTypeClasses, RankNTypes
-  Default-Extensions: ScopedTypeVariables, StandaloneDeriving, TupleSections, TypeApplications, TypeFamilies
