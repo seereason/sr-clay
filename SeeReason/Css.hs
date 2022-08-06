@@ -25,7 +25,6 @@ import Data.Char (isAlphaNum, isAscii, isSpace)
 import Data.Digest.Pure.MD5 (md5)
 import Data.Serialize (encode)
 import Data.Text as Text (pack, singleton, Text)
-import Data.Text.Lazy as Lazy (unpack)
 import qualified Data.Text as Text (concatMap)
 import GHC.Stack
 import GHC.Stack.Types
@@ -33,6 +32,7 @@ import Language.Haskell.TH.Syntax (Name(..), ModName(..), NameFlavour(..), NameS
 
 #if SERVER
 import Clay hiding (not, s, space)
+import Data.Text.Lazy as Lazy (unpack)
 import Language.Haskell.TH (appTypeE, listE, litE, stringL, Type(AppT, ConT))
 import Language.Haskell.TH.Syntax (Dec(..), Exp, mkName, Q, reifyInstances, Type(VarT))
 import System.Directory ()
@@ -96,8 +96,8 @@ withHash s = do
 
 #if SERVER
 -- | Instances of 'CssStyle' generate a Css value.
-class CssStyle a prefs | a -> prefs where
-  cssStyle :: prefs -> Css
+class CssStyle a where
+  cssStyle :: Css
 
 byClass' :: CssClass a => a -> Refinement
 byClass' = byClass . cssClass
@@ -107,9 +107,9 @@ byClass' = byClass . cssClass
 -- is [(FilePath, Css)].
 reifyCss :: Q Exp
 reifyCss = do
-  insts <- reifyInstances ''CssStyle [VarT (mkName "a"), VarT (mkName "prefs")]
-  listE (concatMap (\case InstanceD _ _cxt (AppT (AppT _cls typ@(ConT tname)) prefs) _decs ->
-                            [ [|($(litE (stringL (show tname))), $(appTypeE (appTypeE [|cssStyle|] (pure typ)) (pure prefs)) def)|] ]
+  insts <- reifyInstances ''CssStyle [VarT (mkName "a")]
+  listE (concatMap (\case InstanceD _ _cxt (AppT _cls typ@(ConT tname)) _decs ->
+                            [ [|($(litE (stringL (show tname))), $(appTypeE [|cssStyle|] (pure typ)))|] ]
                           _ -> []) insts)
 
 -- Render and print in a compact format, for debugging
