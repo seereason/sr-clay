@@ -12,12 +12,10 @@ module SeeReason.Css
   ( CssClass(cssClass)
   , withHash
   , protectCSSIdentifier
-#if SERVER
   , CssStyle(cssStyle)
   , byClass'
   , reifyCss
   , putCss'
-#endif
   ) where
 
 import Data.ByteString.Lazy as Lazy (fromStrict)
@@ -30,13 +28,11 @@ import GHC.Stack
 import GHC.Stack.Types
 import Language.Haskell.TH.Syntax (Name(..), ModName(..), NameFlavour(..), NameSpace(..), OccName(..))
 
-#if SERVER
 import Clay hiding (not, s, space)
 import Data.Text.Lazy as Lazy (unpack)
 import Language.Haskell.TH (appTypeE, listE, litE, stringL, Type(AppT, ConT))
 import Language.Haskell.TH.Syntax (Dec(..), Exp, mkName, Q, reifyInstances, Type(VarT))
 import System.Directory ()
-#endif
 
 -- | Instances of 'CssClass' can be converted to css class names.
 class CssClass a where
@@ -94,7 +90,6 @@ withHash s = do
     protectChar c = '_'
 #endif
 
-#if SERVER
 -- | Instances of 'CssStyle' generate a Css value.
 class CssStyle a where
   cssStyle :: Css
@@ -115,4 +110,3 @@ reifyCss = do
 -- Render and print in a compact format, for debugging
 putCss' :: Css -> IO ()
 putCss' = putStrLn . Lazy.unpack . renderWith compact []
-#endif

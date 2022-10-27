@@ -1,5 +1,5 @@
 Name:           sr-clay
-Version:        1.5
+Version:        1.6
 License:        BSD3
 Author:         David Fox
 Category:       Unclassified
@@ -14,12 +14,5 @@ Tested-With: GHC==8.6.5
 Library
   default-language: Haskell2010
   GHC-Options: -Wall -Wredundant-constraints
-  Build-Depends: base >= 4.9 && < 5, bytestring, cereal, pureMD5, template-haskell, text
+  Build-Depends: base >= 4.9 && < 5, bytestring, cereal, clay, data-default, directory, pureMD5, template-haskell, text
   Exposed-Modules: SeeReason.Css
-  if !impl(ghcjs)
-    Build-Depends: clay, data-default, directory
-    cpp-options: -DCLIENT=0
-    cpp-options: -DSERVER=1
-  if impl(ghcjs)
-    cpp-options: -DCLIENT=1
-    cpp-options: -DSERVER=0
