@@ -103,9 +103,13 @@ byClass' = byClass . cssClass
 reifyCss :: Q Exp
 reifyCss = do
   insts <- reifyInstances ''CssStyle [VarT (mkName "a")]
-  listE (concatMap (\case InstanceD _ _cxt (AppT _cls typ@(ConT tname)) _decs ->
-                            [ [|($(litE (stringL (show tname))), $(appTypeE [|cssStyle|] (pure typ)))|] ]
-                          _ -> []) insts)
+  listE (concatMap doInst insts)
+  where
+    doInst (InstanceD _ _cxt (AppT _cls typ@(ConT tname)) _decs) =
+      [ [|($(litE (stringL (show tname))), $(appTypeE [|cssStyle|] (pure typ)))|] ]
+    doInst (InstanceD o cxt (AppT cls (AppT typ _)) decs) =
+      doInst (InstanceD o cxt (AppT cls typ) decs)
+    doInst _ = []
 
 -- Render and print in a compact format, for debugging
 putCss' :: Css -> IO ()
