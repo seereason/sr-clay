@@ -43,6 +43,9 @@ instance CssClass Name where
   cssClass (Name (OccName o) (NameG space _ (ModName m))) =
     protectCSSIdentifier (pack (m <> "-" <> o <>
                                case space of
+#if MIN_VERSION_template_haskell(2,24,0)
+                                 FldName _parent -> "_F"
+#endif
                                  TcClsName -> "_T"
                                  DataName -> "_D"
                                  VarName -> "_V"))
